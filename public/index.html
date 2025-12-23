@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AEM Package Downloader</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: #2d3748;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #a0aec0;
+            font-size: 14px;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #4a5568;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="url"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e0;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        input[type="password"]:focus,
+        input[type="url"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #5a67d8;
+        }
+
+        button:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .message.success {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+
+        .message.error {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #fc8181;
+        }
+
+        .message.info {
+            background: #bee3f8;
+            color: #2c5282;
+            border: 1px solid #90cdf4;
+        }
+
+        #packageList {
+            display: none;
+        }
+
+        .package-item {
+            padding: 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s;
+        }
+
+        .package-item:hover {
+            background: #f7fafc;
+        }
+
+        .package-info {
+            flex: 1;
+        }
+
+        .package-name {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .package-details {
+            font-size: 12px;
+            color: #718096;
+        }
+
+        .package-actions {
+            margin-left: 15px;
+        }
+
+        .btn-download {
+            background: #48bb78;
+            padding: 8px 16px;
+            font-size: 13px;
+        }
+
+        .btn-download:hover {
+            background: #38a169;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #718096;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 AEM Package Downloader</h1>
+            <p>Download content packages from Adobe Experience Manager</p>
+        </div>
+
+        <div class="content">
+            <!-- Authentication Section -->
+            <div id="authSection" class="section">
+                <div class="section-title">Authentication</div>
+                <div id="authMessage"></div>
+                
+                <form id="authForm">
+                    <div class="form-group">
+                        <label for="aemEndpoint">AEM Endpoint URL</label>
+                        <input 
+                            type="url" 
+                            id="aemEndpoint" 
+                            placeholder="https://your-aem-server.com" 
+                            required
+                        >
+                    </div>
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input 
+                            type="text" 
+                            id="username" 
+                            placeholder="admin" 
+                            required
+                        >
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input 
+                            type="password" 
+                            id="password" 
+                            placeholder="••••••••" 
+                            required
+                        >
+                    </div>
+                    <button type="submit" id="authButton">Connect to AEM</button>
+                </form>
+            </div>
+
+            <!-- Package List Section -->
+            <div id="packageList" class="section">
+                <div class="section-title">Available Packages</div>
+                <div id="packageMessage"></div>
+                <button id="refreshButton" style="margin-bottom: 15px;">Refresh Packages</button>
+                <div id="packagesContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = window.location.origin + '/api';
+        let isAuthenticated = false;
+
+        // Authentication Form Handler
+        document.getElementById('authForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const aemEndpoint = document.getElementById('aemEndpoint').value;
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            const authButton = document.getElementById('authButton');
+            authButton.disabled = true;
+            authButton.textContent = 'Connecting...';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/authenticate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ aemEndpoint, username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    showMessage('authMessage', 'Authentication successful!', 'success');
+                    isAuthenticated = true;
+                    document.getElementById('packageList').style.display = 'block';
+                    loadPackages();
+                } else {
+                    showMessage('authMessage', `Authentication failed: ${data.error || data.details}`, 'error');
+                }
+            } catch (error) {
+                showMessage('authMessage', `Connection error: ${error.message}`, 'error');
+            } finally {
+                authButton.disabled = false;
+                authButton.textContent = 'Connect to AEM';
+            }
+        });
+
+        // Refresh Button Handler
+        document.getElementById('refreshButton').addEventListener('click', loadPackages);
+
+        // Load Packages Function
+        async function loadPackages() {
+            if (!isAuthenticated) {
+                showMessage('packageMessage', 'Please authenticate first', 'error');
+                return;
+            }
+
+            const container = document.getElementById('packagesContainer');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div>Loading packages...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/packages`);
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    displayPackages(data.packages);
+                    showMessage('packageMessage', `Found ${data.packages.length} package(s)`, 'success');
+                } else {
+                    showMessage('packageMessage', `Failed to load packages: ${data.error || data.details}`, 'error');
+                    container.innerHTML = '';
+                }
+            } catch (error) {
+                showMessage('packageMessage', `Error loading packages: ${error.message}`, 'error');
+                container.innerHTML = '';
+            }
+        }
+
+        // Display Packages Function
+        function displayPackages(packages) {
+            const container = document.getElementById('packagesContainer');
+            
+            if (packages.length === 0) {
+                container.innerHTML = '<p class="message info">No packages found</p>';
+                return;
+            }
+
+            container.innerHTML = packages.map(pkg => `
+                <div class="package-item">
+                    <div class="package-info">
+                        <div class="package-name">${escapeHtml(pkg.name || 'Unknown Package')}</div>
+                        <div class="package-details">
+                            Group: ${escapeHtml(pkg.group || 'N/A')} | 
+                            Version: ${escapeHtml(pkg.version || 'N/A')} | 
+                            Size: ${formatBytes(pkg.size)}
+                        </div>
+                    </div>
+                    <div class="package-actions">
+                        <button class="btn-download" onclick="downloadPackage('${escapeHtml(pkg.path)}')">
+                            Download
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Download Package Function
+        async function downloadPackage(packagePath) {
+            try {
+                showMessage('packageMessage', 'Initiating download...', 'info');
+
+                const response = await fetch(`${API_BASE_URL}/download`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ packagePath })
+                });
+
+                if (response.ok) {
+                    // Get filename from Content-Disposition header
+                    const disposition = response.headers.get('Content-Disposition');
+                    let filename = 'package.zip';
+                    if (disposition) {
+                        const matches = /filename="([^"]+)"/.exec(disposition);
+                        if (matches && matches[1]) {
+                            filename = matches[1];
+                        }
+                    }
+
+                    // Download the file
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+
+                    showMessage('packageMessage', `Download completed: ${filename}`, 'success');
+                } else {
+                    const data = await response.json();
+                    showMessage('packageMessage', `Download failed: ${data.error || data.details}`, 'error');
+                }
+            } catch (error) {
+                showMessage('packageMessage', `Download error: ${error.message}`, 'error');
+            }
+        }
+
+        // Utility Functions
+        function showMessage(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="message ${type}">${escapeHtml(message)}</div>`;
+            
+            // Auto-hide success messages after 5 seconds
+            if (type === 'success') {
+                setTimeout(() => {
+                    element.innerHTML = '';
+                }, 5000);
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
+
+        function formatBytes(bytes, decimals = 2) {
+            if (bytes === 0) return '0 Bytes';
+            
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+{
+  "name": "aem-package-downloader",
+  "version": "1.0.0",
+  "description": "Download content packages from Adobe Experience Manager (AEM) server as zip files",
+  "main": "src/main/server.js",
+  "scripts": {
+    "start": "node src/main/server.js",
+    "dev": "node src/main/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "aem",
+    "adobe",
+    "package-manager",
+    "downloader",
+    "content-packages"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.13.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1"
+  }
+}
