@@ -97,13 +97,27 @@ app.post('/api/download', async (req, res) => {
     res.setHeader('Content-Type', result.contentType);
     res.setHeader('Content-Disposition', `attachment; filename="${result.filename}"`);
 
-    // Pipe the stream to response
+    // Pipe the stream to response with error handling
+    result.stream.on('error', (streamError) => {
+      console.error('Stream error:', streamError);
+      if (!res.headersSent) {
+        res.status(500).json({ 
+          error: 'Failed to download package', 
+          details: streamError.message 
+        });
+      } else {
+        res.end();
+      }
+    });
+
     result.stream.pipe(res);
   } catch (error) {
-    res.status(500).json({ 
-      error: 'Failed to download package', 
-      details: error.message 
-    });
+    if (!res.headersSent) {
+      res.status(500).json({ 
+        error: 'Failed to download package', 
+        details: error.message 
+      });
+    }
   }
 });
 
